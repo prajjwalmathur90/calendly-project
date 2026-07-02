@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import { ApiError } from "../utils/api-error.js";
-import { success, unknown } from "zod";
+// import { success, unknown } from "zod";
 import { NODE_ENV } from "../config/env.js";
 
 export function errorHandler(
   err: Error,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction,
+  _next: NextFunction,
 ) {
   if (err instanceof ApiError) {
     const body: Record<string, unknown> = {
