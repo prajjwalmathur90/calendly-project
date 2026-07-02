@@ -9,7 +9,6 @@ import {
 
 import { NextFunction, Request, Response } from "express";
 import { sendSuccess } from "../utils/api-response.js";
-import { badRequest, internalServerError } from "../utils/api-error.js";
 
 export async function findAllUsers(_req: Request, _res: Response) {
   const email = _req.query.email as string;

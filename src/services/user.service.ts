@@ -2,7 +2,6 @@ import {
   getAll,
   getByID,
   createUser,
-  updateUser,
   getByEmail,
   deleteUser,
 } from "../repositories/user.repository.js";
