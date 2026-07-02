@@ -26,5 +26,5 @@ export const notFound = (message: string, details?: unknown) =>
 export const conflict = (message: string, details?: unknown) =>
   new ApiError(409, message, details);
 
-export const internalServerError = (message: "Internal Server Error") =>
+export const internalServerError = (message = "Internal Server Error") =>
   new ApiError(500, message);

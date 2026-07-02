@@ -1,86 +1,72 @@
 import {
   findAllUsers as findAllUsersService,
   findById as findByIdService,
-  create as createService,
+  createService as createService,
   findByEmail as findByEmailService,
   updateById as updateByIdService,
   deleteUserById as deleteUserByIdService,
 } from "../services/user.service.js";
 
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
+import { sendSuccess } from "../utils/api-response.js";
+import { badRequest, internalServerError } from "../utils/api-error.js";
 
 export async function findAllUsers(_req: Request, _res: Response) {
   const email = _req.query.email as string;
 
   if (email) {
     const user = await findByEmailService(email);
-    return _res.json(user);
+    return sendSuccess(_res, user);
   }
 
   const users = await findAllUsersService();
-  return _res.json(users);
+  return sendSuccess(_res, users);
 }
 
 export async function findById(_req: Request, _res: Response) {
   const { id } = _req.params;
   const response = await findByIdService(Number(id));
-  _res.json(response);
+  return sendSuccess(_res, response);
 }
 
-export async function create(req: Request, res: Response) {
+export async function create(req: Request, res: Response, next: NextFunction) {
   try {
-    const { name, email } = req.body;
+    const response = await createService(req.body);
 
-    if (!name || !email) {
-      return res.status(400).json({
-        message: "Name and email are required",
-      });
-    }
-
-    const response = await createService(name, email);
-    return res.status(201).json({
-      message: "User Created Successfully",
-      response,
-    });
+    return sendSuccess(res, response, 201, "User Created Successfully");
   } catch (error) {
-    return res.status(500).json({
-      message: "Something went wrong",
-    });
+    return next(error);
   }
 }
 
-export async function updateName(req: Request, res: Response) {
+export async function updateName(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
     const { id } = req.params;
     const { name } = req.body;
 
     const user = await updateByIdService(name, Number(id));
 
-    return res.status(200).json({
-      message: "User Updated Successfully",
-      user,
-    });
+    return sendSuccess(res, user, 200, "User updated Successfully");
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      message: "Something went wrong",
-    });
+    return next(error);
   }
 }
 
-export async function deleteUserById(req: Request, res: Response) {
+export async function deleteUserById(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
     const { id } = req.params;
-
     const user = await deleteUserByIdService(Number(id));
 
-    return res.status(200).json({
-      message: "User deleted successfully",
-      user,
-    });
+    return sendSuccess(res, user, 200, "User Deleted Successfully");
   } catch (error) {
-    return res.status(404).json({
-      message: error instanceof Error ? error.message : "Something went wrong",
-    });
+    next(error);
   }
 }

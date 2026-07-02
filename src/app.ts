@@ -20,6 +20,5 @@ app.get("/health", (_req, res) => {
 app.use("/users", userRouter);
 
 app.use(routeNotFound);
-
 app.use(errorHandler);
 export { app };
