@@ -1,14 +1,19 @@
+import { CreateUserDto, UpdateUserNameDto } from "../dtos/user.dts.js";
 import {
   getAll,
   getByID,
   createUser,
   getByEmail,
-  deleteUser,
+  updateUserNameById as updateUserNameByIdRepository,
+  deleteUserById as deleteUserByIdRepository,
 } from "../repositories/user.repository.js";
-import { badRequest, notFound } from "../utils/api-error.js";
+import { badRequest, conflict, notFound } from "../utils/api-error.js";
 
 export async function findAllUsers() {
   const users = await getAll();
+  if (!users) {
+    throw notFound("Users not found");
+  }
   return users;
 }
 
@@ -28,18 +33,17 @@ export async function findByEmail(email: string) {
   return user;
 }
 
-export async function createService(data: { name: string; email: string }) {
-  const { name, email } = data;
-
-  if (!name || !email) {
-    throw badRequest("Name and email are required");
+export async function createService(data: CreateUserDto) {
+  const existingUser = await getByEmail(data.email);
+  if (existingUser) {
+    throw conflict("User already exists!");
   }
 
-  return createUser(name, email);
+  return createUser(data);
 }
 
-export async function updateById(name: string, id: number) {
-  if (!name) {
+export async function updateUserNameById(id: number, data: UpdateUserNameDto) {
+  if (!data.name) {
     throw badRequest("Name is required");
   }
 
@@ -48,7 +52,7 @@ export async function updateById(name: string, id: number) {
   if (!user) {
     throw notFound("User not found");
   }
-  return user;
+  return updateUserNameByIdRepository(id, data.name);
 }
 
 export async function deleteUserById(id: number) {
@@ -57,5 +61,5 @@ export async function deleteUserById(id: number) {
     throw notFound("User not found");
   }
 
-  return deleteUser(id);
+  return deleteUserByIdRepository(id);
 }

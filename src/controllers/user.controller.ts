@@ -3,7 +3,7 @@ import {
   findById as findByIdService,
   createService as createService,
   findByEmail as findByEmailService,
-  updateById as updateByIdService,
+  updateUserNameById as updateUserNameByIdService,
   deleteUserById as deleteUserByIdService,
 } from "../services/user.service.js";
 
@@ -28,44 +28,26 @@ export async function findById(_req: Request, _res: Response) {
   return sendSuccess(_res, response);
 }
 
-export async function create(req: Request, res: Response, next: NextFunction) {
-  try {
-    const response = await createService(req.body);
-
-    return sendSuccess(res, response, 201, "User Created Successfully");
-  } catch (error) {
-    return next(error);
-  }
+export async function create(req: Request, res: Response) {
+  const response = await createService(req.body);
+  sendSuccess(res, response, 201, "User Created Successfully");
 }
 
-export async function updateName(
+export async function updateUserNameById(
   req: Request,
-  res: Response,
-  next: NextFunction,
+  res: Response
 ) {
-  try {
-    const { id } = req.params;
-    const { name } = req.body;
-
-    const user = await updateByIdService(name, Number(id));
-
-    return sendSuccess(res, user, 200, "User updated Successfully");
-  } catch (error) {
-    return next(error);
-  }
+  const { id } = req.params;
+  const user = await updateUserNameByIdService(Number(id), req.body);
+  return sendSuccess(res, user, 200, "User updated Successfully");
 }
 
 export async function deleteUserById(
   req: Request,
-  res: Response,
-  next: NextFunction,
+  res: Response
 ) {
-  try {
-    const { id } = req.params;
-    const user = await deleteUserByIdService(Number(id));
+  const { id } = req.params;
+  const user = await deleteUserByIdService(Number(id));
 
-    return sendSuccess(res, user, 200, "User Deleted Successfully");
-  } catch (error) {
-    next(error);
-  }
+  return sendSuccess(res, user, 200, "User Deleted Successfully");
 }
