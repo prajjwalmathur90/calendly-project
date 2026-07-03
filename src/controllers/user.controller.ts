@@ -7,7 +7,7 @@ import {
   deleteUserById as deleteUserByIdService,
 } from "../services/user.service.js";
 
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import { sendSuccess } from "../utils/api-response.js";
 
 export async function findAllUsers(_req: Request, _res: Response) {
