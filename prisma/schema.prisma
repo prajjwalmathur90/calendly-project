@@ -12,13 +12,32 @@ datasource db {
   provider = "mysql"
 }
 
-
 model User {
-  id        Int   @id  @default(autoincrement())
-  email     String @unique
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         Int          @id @default(autoincrement())
+  email      String       @unique
+  name       String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @default(now()) @updatedAt
+  eventTypes EventTypes[]
 
   @@map("users") // Maps entire model to a users table 
+}
+
+model EventTypes {
+  id                  Int      @id @default(autoincrement())
+  hostId              Int
+  title               String
+  description         String?
+  durationMinutes     Int
+  isActive            Boolean  @default(true)
+  locationType        String   @default("Online")
+  locationValue       String?
+  bufferBeforeMinutes Int      @default(0)
+  bufferAfterMinutes  Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @default(now()) @updatedAt 
+
+  host User @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  @@map("event_types")
 }
