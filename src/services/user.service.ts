@@ -1,4 +1,4 @@
-import { CreateUserDto, UpdateUserNameDto } from "../dtos/user.dts.js";
+import { CreateUserDto, UpdateUserNameDto } from "../dtos/user.dto.js";
 import {
   getAll,
   getByID,

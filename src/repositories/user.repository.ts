@@ -1,5 +1,5 @@
 import { prisma } from "../config/database.js";
-import { CreateUserDto } from "../dtos/user.dts.js";
+import { CreateUserDto } from "../dtos/user.dto.js";
 
 export async function getAll() {
   const users = await prisma.user.findMany();

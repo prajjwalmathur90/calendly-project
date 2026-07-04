@@ -7,7 +7,7 @@ import {
   deleteUserById,
 } from "../controllers/user.controller.js";
 import { validate } from "../middlewares/validate.js";
-import { createUserSchema, updateUserNameSchema } from "../dtos/user.dts.js";
+import { createUserSchema, updateUserNameSchema } from "../dtos/user.dto.js";
 
 export const userRouter: Router = Router();
 
