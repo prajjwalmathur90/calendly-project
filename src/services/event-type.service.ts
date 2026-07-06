@@ -1,53 +1,115 @@
+import slug from "slug";
 import { CreateEventDto, UpdateEventDto } from "../dtos/event.dto.js";
 import {
   createEvent,
   deleteEvent,
-  getAllEvent,
-  getEventByID,
+  getByHostIdOrSlug,
+  getEventByHostId,
+  getEventById,
   updateEvent,
 } from "../repositories/event-type.repository.js";
+import { conflict, forbidden, notFound } from "../utils/api-error.js";
 import { getByID } from "../repositories/user.repository.js";
-import { notFound } from "../utils/api-error.js";
 
-export async function findAllEventService() {
-  const events = await getAllEvent();
-  if (!events) {
-    throw notFound("No events found!!");
-  }
-  return events;
-}
-
-export async function findEventByIDService(id: number) {
-  const event = await getEventByID(id);
+export async function listEventService(hostId: number) {
+  const event = getEventByHostId(hostId);
   if (!event) {
-    throw notFound("Event not found");
+    throw notFound("No Events found");
   }
   return event;
 }
 
-export async function createEventService(data: CreateEventDto) {
-  const user = await getByID(data.hostId);
-
-  if (!user) {
-    throw notFound("Host user not found");
-  }
-
-  return createEvent(data);
-}
-
-export async function updateEventService(id: number, data: UpdateEventDto) {
-  const event = await updateEvent(id, data);
+export async function findEventByIDService(hostId: number, id: number) {
+  const event = await getEventById(id);
   if (!event) {
     throw notFound("Event not found");
   }
 
+  if (event.hostId !== hostId) {
+    throw forbidden("You are not authorized to view this event");
+  }
   return event;
 }
 
-export async function deleteEventService(id: number) {
-  const event = await deleteEvent(id);
+export async function createEventService(hostId: number, data: CreateEventDto) {
+  const slugPassed = data.slug ?? slug(data.title, { lower: true });
+
+  if (!slugPassed) {
+    throw conflict("Could not generate a slug for the event type");
+  }
+
+  const isSlugTaken = await getByHostIdOrSlug(hostId, slugPassed);
+  if (isSlugTaken) {
+    throw conflict(
+      "A event type with this slug already exists, please use a different slug",
+    );
+  }
+
+  return createEvent(hostId, { ...data, slug: slugPassed });
+}
+
+export async function updateEventService(
+  hostId: number,
+  id: number,
+  data: UpdateEventDto,
+) {
+  const eventType = await getEventById(id);
+  if (!eventType) {
+    throw notFound("Event type not found");
+  }
+  if (eventType.hostId !== hostId) {
+    throw forbidden("You are not authorized to update this event type");
+  }
+
+  if (data.slug && data.slug !== eventType.slug) {
+    const isSlugTaken = await getByHostIdOrSlug(hostId, data.slug);
+    if (isSlugTaken) {
+      throw conflict(
+        "A event type with this slug already exists, please use a different slug",
+      );
+    }
+  }
+
+  return updateEvent(id, data);
+}
+
+export async function deleteEventService(hostId: number, id: number) {
+  const event = await getEventById(id);
   if (!event) {
     throw notFound("Event doesn't exist");
   }
-  return event;
+  if (event.hostId !== hostId) {
+    throw forbidden("You are not authorized to delete for this event.");
+  }
+  return deleteEvent(id);
+}
+
+export async function findEventByIdPublicService(
+  hostId: number,
+  eventSlug: string,
+) {
+  const event = await getByHostIdOrSlug(hostId, eventSlug);
+
+  if (!event) {
+    throw notFound("Event not found");
+  }
+
+  const host = await getByID(hostId);
+  if (!host) {
+    throw notFound("Host not found");
+  }
+
+  return {
+    event: {
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      durationMinutes: event.durationMinutes,
+      loactionType: event.locationType,
+    },
+    host: {
+      name: host.name,
+      email: host.email,
+    },
+  };
 }
