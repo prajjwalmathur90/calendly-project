@@ -8,7 +8,27 @@ import { publicEventRouter } from "./routers/public-event.router.js";
 const app: Express = express();
 
 // it helps to deserialize the rqeuest body into the javascript object
-app.use(express.json());
+app.use(
+  express.json({
+    type: (req) => {
+      const contentType = req.headers["content-type"];
+      const method = req.method ?? "";
+
+      if (!contentType) {
+        return ["POST", "PUT", "PATCH"].includes(method);
+      }
+
+      const value = Array.isArray(contentType) ? contentType[0] : contentType;
+      if (!value) return false;
+
+      return (
+        value.includes("application/json") ||
+        value.includes("+json") ||
+        value.includes("text/plain")
+      );
+    },
+  }),
+);
 app.use(express.text());
 app.use(express.urlencoded({ extended: true }));
 

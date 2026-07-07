@@ -32,12 +32,14 @@ export const createEventSchema = z.object({
   bufferBeforeMinutes: z
     .number()
     .int("Buffer Before Minutes must be an integer")
-    .min(0, "Buffer Before Minutes cannot be negative"),
+    .min(0, "Buffer Before Minutes cannot be negative")
+    .optional(),
 
   bufferAfterMinutes: z
     .number()
     .int("Buffer After Minutes must be an integer")
-    .min(0, "Buffer After Minutes cannot be negative"),
+    .min(0, "Buffer After Minutes cannot be negative")
+    .optional(),
 
   slug: z
     .string()

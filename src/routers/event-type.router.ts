@@ -8,11 +8,19 @@ import {
 } from "../controllers/event-type.controller.js";
 import { validate } from "../middlewares/validate.js";
 import { createEventSchema, updateEventSchema } from "../dtos/event.dto.js";
+import { requireUserId } from "../middlewares/require-userId.js";
 
 export const eventRouter: Router = Router();
+
+eventRouter.use(requireUserId);
 
 eventRouter.get("/", findAllEvents);
 eventRouter.get("/:id", findEventByID);
 eventRouter.post("/", validate(createEventSchema), createEvent);
-eventRouter.post("/:id", validate(updateEventSchema), updateEvent);
+eventRouter.post("/new", validate(createEventSchema), createEvent);
+eventRouter.patch(
+  "/:id",
+  validate(updateEventSchema),
+  updateEvent,
+);
 eventRouter.delete("/:id", deleteEvent);
