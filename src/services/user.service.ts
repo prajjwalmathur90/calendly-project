@@ -1,19 +1,18 @@
-import { CreateUserDto, UpdateUserNameDto } from "../dtos/user.dto.js";
+import slug from "slug";
+import { CreateUserDto, UpdateUserDto } from "../dtos/user.dto.js";
 import {
   getAll,
   getByID,
   createUser,
   getByEmail,
-  updateUserNameById as updateUserNameByIdRepository,
+  updateUser,
   deleteUserById as deleteUserByIdRepository,
+  getBySlug,
 } from "../repositories/user.repository.js";
-import { badRequest, conflict, notFound } from "../utils/api-error.js";
+import { conflict, notFound } from "../utils/api-error.js";
 
 export async function findAllUsers() {
   const users = await getAll();
-  if (!users) {
-    throw notFound("Users not found");
-  }
   return users;
 }
 
@@ -34,25 +33,46 @@ export async function findByEmail(email: string) {
 }
 
 export async function createService(data: CreateUserDto) {
-  const existingUser = await getByEmail(data.email);
-  if (existingUser) {
-    throw conflict("User already exists!");
+  const slugPassed = data.slug ?? slug(data.name, { lower: true });
+  if (!slugPassed) {
+    throw conflict("Could not generate a slug for the user");
   }
 
-  return createUser(data);
+  const isSlugTaken = await getBySlug(slugPassed);
+  if (isSlugTaken) {
+    throw conflict(
+      "A event type with this slug already exists, please use a different slug",
+    );
+  }
+
+  return createUser({ ...data, slug: slugPassed });
 }
 
-export async function updateUserNameById(id: number, data: UpdateUserNameDto) {
-  if (!data.name) {
-    throw badRequest("Name is required");
-  }
-
+export async function updateUserService(id: number, data: UpdateUserDto) {
   const user = await getByID(id);
-
   if (!user) {
     throw notFound("User not found");
   }
-  return updateUserNameByIdRepository(id, data.name);
+
+  if (data.email && data.email !== user.email) {
+    const isEmailTaken = await getByEmail(data.email);
+    if (isEmailTaken) {
+      throw conflict(
+        "A user with this email already exists, please use a different email",
+      );
+    }
+  }
+
+  if (data.slug && data.slug !== user.slug) {
+    const isSlugTaken = await getBySlug(data.slug);
+    if (isSlugTaken) {
+      throw conflict(
+        "A user with this slug already exists, please use a different slug",
+      );
+    }
+  }
+
+  return updateUser(id, data);
 }
 
 export async function deleteUserById(id: number) {

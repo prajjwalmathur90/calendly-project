@@ -6,14 +6,19 @@ export const createUserSchema = z.object({
     .string()
     .min(1, "Name is Required")
     .max(100, "Name must be less than 100 characters"),
-});
-
-export const updateUserNameSchema = z.object({
-  name: z
+  slug: z
     .string()
-    .min(1, "Name is Required")
-    .max(100, "Name must be less than 100 characters"),
+    .min(1)
+    .max(100)
+    .regex(
+      /^[a-z0-9-]+$/,
+      "Slug may only contain lowercase letters, numbers, and hyphens",
+    )
+    .optional(),
 });
 
 export type CreateUserDto = z.infer<typeof createUserSchema>;
-export type UpdateUserNameDto = z.infer<typeof updateUserNameSchema>;
+
+export const updateUserSchema = createUserSchema.partial();
+
+export type UpdateUserDto = z.infer<typeof updateUserSchema>;

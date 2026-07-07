@@ -1,5 +1,5 @@
 import { prisma } from "../config/database.js";
-import { CreateUserDto } from "../dtos/user.dto.js";
+import { CreateUserDto, UpdateUserDto } from "../dtos/user.dto.js";
 
 export async function getAll() {
   const users = await prisma.user.findMany();
@@ -24,26 +24,38 @@ export async function getByEmail(email: string) {
   return user;
 }
 
-export async function createUser(data: CreateUserDto) {
+export async function createUser(data: CreateUserDto & { slug: String }) {
   const user = await prisma.user.create({
-    data,
+    data: {
+      ...data,
+    },
   });
 
   return user;
 }
 
-export async function updateUserNameById(id: number, name: string) {
-  const user = await prisma.user.update({
-    where: { id: id },
-    data: { name: name },
+export async function updateUser(id: number, data: UpdateUserDto) {
+  return prisma.user.update({
+    where: {
+      id,
+    },
+    data,
   });
-
-  return user;
 }
 
 export async function deleteUserById(id: number) {
   const user = await prisma.user.delete({
     where: { id },
+  });
+
+  return user;
+}
+
+export async function getBySlug(slug: string) {
+  const user = await prisma.user.findFirst({
+    where: {
+      slug,
+    },
   });
 
   return user;

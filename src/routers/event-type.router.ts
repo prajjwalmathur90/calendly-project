@@ -16,11 +16,6 @@ eventRouter.use(requireUserId);
 
 eventRouter.get("/", findAllEvents);
 eventRouter.get("/:id", findEventByID);
-eventRouter.post("/", validate(createEventSchema), createEvent);
 eventRouter.post("/new", validate(createEventSchema), createEvent);
-eventRouter.patch(
-  "/:id",
-  validate(updateEventSchema),
-  updateEvent,
-);
+eventRouter.patch("/:id", validate(updateEventSchema), updateEvent);
 eventRouter.delete("/:id", deleteEvent);

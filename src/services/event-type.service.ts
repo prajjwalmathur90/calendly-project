@@ -12,7 +12,7 @@ import { conflict, forbidden, notFound } from "../utils/api-error.js";
 import { getByID } from "../repositories/user.repository.js";
 
 export async function listEventService(hostId: number) {
-  const event = getEventByHostId(hostId);
+  const event = await getEventByHostId(hostId);
   if (!event) {
     throw notFound("No Events found");
   }
@@ -43,6 +43,11 @@ export async function createEventService(hostId: number, data: CreateEventDto) {
     throw conflict(
       "A event type with this slug already exists, please use a different slug",
     );
+  }
+
+  const host = await getByID(hostId);
+  if (!host) {
+    throw notFound("Host not found");
   }
 
   return createEvent(hostId, { ...data, slug: slugPassed });
