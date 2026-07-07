@@ -27,7 +27,7 @@ export function errorHandler(
     message: "Something went wrong",
   };
 
-  if (NODE_ENV === "developement") body.details = err.stack;
+  if (NODE_ENV === "development") body.details = err.stack;
 
   res.status(500).json(body);
 }
