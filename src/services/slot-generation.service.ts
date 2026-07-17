@@ -113,10 +113,10 @@ export function applyExceptionsForDate(
   date: DateTime,
   baseWindows: TimeWindow[],
   exceptions: Array<{
-    type: "BLOCK_FULL_DAY" | "BLOCK_PARTIAL" | "ADD_AVAILABLE_WINDOW";
+    type: string;
     startTime: string | null;
     endTime: string | null;
-    timeZone: string;
+    timezone: string;
   }>,
 ): TimeWindow[] {
   let windows = [...baseWindows];
@@ -128,8 +128,8 @@ export function applyExceptionsForDate(
 
     if (ex.type === "BLOCK_PARTIAL" && ex.startTime && ex.endTime) {
       const block = {
-        start: parseTimeOnDate(date, ex.startTime, ex.timeZone),
-        end: parseTimeOnDate(date, ex.endTime, ex.timeZone),
+        start: parseTimeOnDate(date, ex.startTime, ex.timezone),
+        end: parseTimeOnDate(date, ex.endTime, ex.timezone),
       };
 
       windows = subtractWindow(windows, block);
@@ -137,11 +137,33 @@ export function applyExceptionsForDate(
 
     if (ex.type === "ADD_AVAILABLE_WINDOW" && ex.startTime && ex.endTime) {
       windows.push({
-        start: parseTimeOnDate(date, ex.startTime, ex.timeZone),
-        end: parseTimeOnDate(date, ex.endTime, ex.timeZone),
+        start: parseTimeOnDate(date, ex.startTime, ex.timezone),
+        end: parseTimeOnDate(date, ex.endTime, ex.timezone),
       });
     }
   }
 
   return mergeWindows(windows);
+}
+
+export function windowsForWeekdayRule(
+  date: DateTime,
+  weekday: number,
+  startTime: string,
+  endTime: string,
+  timeZone: string,
+): TimeWindow[] {
+  const localDate = date.setZone(timeZone).startOf("day");
+  const luxonWeekday = weekday === 0 ? 7 : weekday;
+
+  if (localDate.weekday !== luxonWeekday) return [];
+
+  const start = parseTimeOnDate(localDate, startTime, timeZone);
+  const end = parseTimeOnDate(localDate, endTime, timeZone);
+
+  if (!start.isValid || !end.isValid || start >= end) {
+    return [];
+  }
+
+  return [{ start, end }];
 }

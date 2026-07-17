@@ -27,7 +27,7 @@ export async function findAvailabilityById(id: number) {
 }
 
 export async function findActiveAvailablity(userId: number) {
-  return await prisma.availabiltyException.findMany({
+  return await prisma.availabiltyRules.findMany({
     where: {
       userId,
       isActive: true,
