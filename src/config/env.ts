@@ -9,3 +9,11 @@ export const DATABASE_NAME = process.env.DATABASE_NAME!;
 export const NODE_ENV = process.env.NODE_ENV || "development";
 export const SLOT_GENERATION_SLOTS =
   Number(process.env.SLOT_GENERATION_DAYS) || 30;
+
+export const TEMPORAL_ADDRESS =
+  process.env.TEMPORAL_ADDRESS || "localhost:7233";
+export const TEMPORAL_NAMESPACE = process.env.TEMPORAL_NAMESPACE || "default";
+export const TEMPORAL_TASK_QUEUE =
+  process.env.TEMPORAL_TASK_QUEUE || "calendly_tasks";
+
+export const TEMPORAL_ENABLED = process.env.TEMPORAL_ENABLED === "true";
