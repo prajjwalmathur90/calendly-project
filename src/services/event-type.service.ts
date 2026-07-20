@@ -10,6 +10,7 @@ import {
 } from "../repositories/event-type.repository.js";
 import { conflict, forbidden, notFound } from "../utils/api-error.js";
 import { getByID } from "../repositories/user.repository.js";
+import { startRegenerateHostSlotsWorkflow } from "../temporal/client.js";
 
 export async function listEventService(hostId: number) {
   const event = await getEventByHostId(hostId);
@@ -50,7 +51,9 @@ export async function createEventService(hostId: number, data: CreateEventDto) {
     throw notFound("Host not found");
   }
 
-  return createEvent(hostId, { ...data, slug: slugPassed });
+  const eventType = createEvent(hostId, { ...data, slug: slugPassed });
+  await startRegenerateHostSlotsWorkflow({ hostId });
+  return eventType;
 }
 
 export async function updateEventService(

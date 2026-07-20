@@ -16,4 +16,4 @@ export const TEMPORAL_NAMESPACE = process.env.TEMPORAL_NAMESPACE || "default";
 export const TEMPORAL_TASK_QUEUE =
   process.env.TEMPORAL_TASK_QUEUE || "calendly_tasks";
 
-export const TEMPORAL_ENABLED = process.env.TEMPORAL_ENABLED === "true";
+export const TEMPORAL_ENABLED = "true";
