@@ -17,6 +17,7 @@ import {
   updateException,
 } from "../repositories/availability.js";
 import { getByID } from "../repositories/user.repository.js";
+import { regenerateHostSlotsWorkflow } from "../temporal/workflows/slot-generation.workflow.js";
 import { forbidden, notFound } from "../utils/api-error.js";
 
 export async function listRulesService(userId: number) {
@@ -37,6 +38,8 @@ export async function createRuleService(
     throw notFound("User not found");
   }
 
+  await regenerateHostSlotsWorkflow({ hostId: userId });
+
   return createAvailability(userId, data);
 }
 
@@ -54,7 +57,9 @@ export async function updateRuleService(
     throw forbidden("You are not authorized to update this availability rule");
   }
 
-  return updateAvailability(id, data);
+  const update = await updateAvailability(id, data);
+  await regenerateHostSlotsWorkflow({ hostId: userId });
+  return update;
 }
 
 export async function deleteRuleService(userId: number, id: number) {
@@ -67,7 +72,9 @@ export async function deleteRuleService(userId: number, id: number) {
     throw forbidden("You are not authorized to delete this availability rule");
   }
 
-  return deleteAvailability(id);
+  const remove = await deleteAvailability(id);
+  await regenerateHostSlotsWorkflow({ hostId: userId });
+  return remove;
 }
 
 export async function listExceptionsService(userId: number) {
@@ -87,6 +94,7 @@ export async function createExceptionService(
   if (!user) {
     throw notFound("User not found");
   }
+  await regenerateHostSlotsWorkflow({ hostId: userId });
 
   return createException(userId, data);
 }
@@ -107,7 +115,9 @@ export async function updateExceptionService(
     );
   }
 
-  return updateException(id, data);
+  const update = await updateException(id, data);
+  await regenerateHostSlotsWorkflow({ hostId: userId });
+  return update;
 }
 
 export async function deleteExceptionService(userId: number, id: number) {
@@ -122,5 +132,7 @@ export async function deleteExceptionService(userId: number, id: number) {
     );
   }
 
-  return deleteException(id);
+  const remove = await deleteException(id);
+  await regenerateHostSlotsWorkflow({ hostId: userId });
+  return remove;
 }

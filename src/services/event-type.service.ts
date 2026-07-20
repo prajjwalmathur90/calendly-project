@@ -11,6 +11,7 @@ import {
 import { conflict, forbidden, notFound } from "../utils/api-error.js";
 import { getByID } from "../repositories/user.repository.js";
 import { startRegenerateHostSlotsWorkflow } from "../temporal/client.js";
+import { regenerateHostSlotsWorkflow } from "../temporal/workflows/slot-generation.workflow.js";
 
 export async function listEventService(hostId: number) {
   const event = await getEventByHostId(hostId);
@@ -78,7 +79,9 @@ export async function updateEventService(
     }
   }
 
-  return updateEvent(id, data);
+  const updateEventType = await updateEvent(id, data);
+  await regenerateHostSlotsWorkflow({ hostId });
+  return updateEventType;
 }
 
 export async function deleteEventService(hostId: number, id: number) {
@@ -89,7 +92,9 @@ export async function deleteEventService(hostId: number, id: number) {
   if (event.hostId !== hostId) {
     throw forbidden("You are not authorized to delete for this event.");
   }
-  return deleteEvent(id);
+  const removeEventType = await deleteEvent(id);
+  await regenerateHostSlotsWorkflow({ hostId });
+  return removeEventType;
 }
 
 export async function findEventByIdPublicService(
