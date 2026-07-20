@@ -51,7 +51,7 @@ import {
   findBookedSlotsByHostInRange,
   upsertSlot,
   findSlotsByEventInRange,
-  updateSlotStatus
+  updateSlotStatus,
 } from "../repositories/slots.repository.js";
 import { getByID as getUserByID } from "../repositories/user.repository.js";
 import {
@@ -81,11 +81,11 @@ export async function regenerateHostSlots(input: RegenerateHostSlotsInput) {
   // Use provided date range or generate from today.
   const from = input.from
     ? DateTime.fromISO(input.from, { zone: "utc" }).startOf("day")
-    : DateTime.now().startOf("day");
+    : DateTime.now().startOf("day").toUTC();
 
   const to = input.to
     ? DateTime.fromISO(input.to, { zone: "utc" }).startOf("day")
-    : from.plus({ days: SLOT_GENERATION_SLOTS }).endOf("day");
+    : from.plus({ days: SLOT_GENERATION_SLOTS }).endOf("day").toUTC();
 
   // Fetch everything needed for slot generation in parallel.
   const [rules, exceptions, eventTypes, bookedSlots] = await Promise.all([
@@ -186,7 +186,13 @@ export async function regenerateHostSlots(input: RegenerateHostSlotsInput) {
 
         // Create the slot if it doesn't exist,
         // otherwise mark it AVAILABLE again.
-        await upsertSlot(eventType.id, input.hostId, startAt, endAt, "AVAILABLE");
+        await upsertSlot(
+          eventType.id,
+          input.hostId,
+          startAt,
+          endAt,
+          "AVAILABLE",
+        );
       }
     }
 
@@ -196,7 +202,7 @@ export async function regenerateHostSlots(input: RegenerateHostSlotsInput) {
       eventType.id,
       from.toJSDate(),
       to.toJSDate(),
-      ["AVAILABLE", "BLOCKED"]
+      ["AVAILABLE", "BLOCKED"],
     );
 
     // Any slot that was NOT regenerated during this run
