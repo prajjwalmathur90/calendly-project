@@ -75,3 +75,43 @@ export async function updateSlotStatus(id: string, status: "AVAILABLE" | "BOOKED
     },
   });
 }
+
+type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
+export async function findSlotByIdInTx(tx: TxClient, id: string) {
+  return tx.slots.findUnique({
+    where: { id },
+  });
+}
+
+export async function updateSlotStatusOptimisticallyInTx(
+  tx: TxClient,
+  id: string,
+  fromStatus: string,
+  toStatus: string
+) {
+  return tx.slots.updateMany({
+    where: {
+      id,
+      status: fromStatus,
+    },
+    data: {
+      status: toStatus,
+    },
+  });
+}
+
+export async function findSlotByIdPessimisticallyInTx(tx: TxClient, id: string) {
+  return tx.$queryRaw<any[]>`
+    SELECT * FROM slots 
+    WHERE id = ${id} 
+    FOR UPDATE
+  `;
+}
+
+export async function updateSlotStatusInTx(tx: TxClient, id: string, status: string) {
+  return tx.slots.update({
+    where: { id },
+    data: { status },
+  });
+}
