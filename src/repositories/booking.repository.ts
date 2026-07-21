@@ -24,3 +24,38 @@ export async function createBookingInTx(
     },
   });
 }
+
+export async function listHostBookings(
+  userId: number,
+  filters: { from?: Date; to?: Date; status?: string }
+) {
+  const where: any = {
+    hostId: userId,
+  };
+
+  if (filters.status) {
+    where.status = filters.status;
+  }
+
+  if (filters.from || filters.to) {
+    where.slot = {};
+    if (filters.from) {
+      where.slot.startAt = { ...where.slot.startAt, gte: filters.from };
+    }
+    if (filters.to) {
+      where.slot.startAt = { ...where.slot.startAt, lte: filters.to };
+    }
+  }
+
+  return prisma.booking.findMany({
+    where,
+    include: {
+      slot: true,
+      eventType: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+

@@ -7,7 +7,21 @@ import {
   findSlotByIdPessimisticallyInTx,
   updateSlotStatusInTx,
 } from "../repositories/slots.repository.js";
-import { createBookingInTx } from "../repositories/booking.repository.js";
+import { createBookingInTx, listHostBookings } from "../repositories/booking.repository.js";
+import { startRegenerateHostSlotsWorkflow } from "../temporal/client.js";
+
+async function triggerSlotRegen(hostId: number, slotStartAt: Date) {
+  const date = slotStartAt.toISOString().split("T")[0];
+  await startRegenerateHostSlotsWorkflow({
+    hostId,
+    from: date,
+    to: date,
+  });
+
+  console.log(
+    `[booking] Triggering slot regeneration for host ${hostId} on ${date}`,
+  );
+}
 
 export async function createBookingOptimistically(
   userId: number,
@@ -32,7 +46,7 @@ export async function createBookingOptimistically(
       tx as any,
       dto.slotId,
       "AVAILABLE",
-      "BOOKED"
+      "BOOKED",
     );
 
     if (updated.count !== 1) {
@@ -41,6 +55,8 @@ export async function createBookingOptimistically(
 
     return createBookingInTx(tx as any, userId, slot, dto);
   });
+
+  await triggerSlotRegen(userId, booking.slot.startAt);
 
   return {
     booking: {
@@ -57,7 +73,6 @@ export async function createBookingPessimistically(
   dto: CreateBookingDto,
 ) {
   const booking = await prisma.$transaction(async (tx) => {
-    // Pessimistic lock using SELECT ... FOR UPDATE
     const slots = await findSlotByIdPessimisticallyInTx(tx as any, dto.slotId);
 
     if (!slots || slots.length === 0) {
@@ -70,7 +85,8 @@ export async function createBookingPessimistically(
       throw badRequest("Slot is not available");
     }
 
-    const endAt = slot.endAt instanceof Date ? slot.endAt : new Date(slot.endAt);
+    const endAt =
+      slot.endAt instanceof Date ? slot.endAt : new Date(slot.endAt);
     if (endAt < new Date()) {
       throw badRequest("Slot has already started");
     }
@@ -88,4 +104,23 @@ export async function createBookingPessimistically(
       endAt: booking.slot.endAt.toISOString(),
     },
   };
+}
+
+
+export async function listHostBooking(
+  userId: number,
+  filters: { from?: Date; to?: Date; status?: string }
+) {
+  const bookings = await listHostBookings(userId, filters);
+
+  return bookings.map(b => ({
+    id: b.id,
+    status: b.status,
+    inviteeEmail: b.inviteeEmail,
+    inviteeName: b.inviteeName,
+    startAt: b.slot.startAt.toISOString(),
+    endAt: b.slot.endAt.toISOString(),
+    eventType: b.eventType.title,
+    createdAt: b.createdAt.toISOString(),
+  }));
 }
