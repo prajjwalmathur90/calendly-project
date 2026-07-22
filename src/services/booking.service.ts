@@ -7,8 +7,14 @@ import {
   findSlotByIdPessimisticallyInTx,
   updateSlotStatusInTx,
 } from "../repositories/slots.repository.js";
-import { createBookingInTx, listHostBookings } from "../repositories/booking.repository.js";
-import { startRegenerateHostSlotsWorkflow } from "../temporal/client.js";
+import {
+  createBookingInTx,
+  listHostBookings,
+} from "../repositories/booking.repository.js";
+import {
+  startRegenerateHostSlotsWorkflow,
+  startSendBookingConfirmationEmailWorkflow,
+} from "../temporal/client.js";
 
 async function triggerSlotRegen(hostId: number, slotStartAt: Date) {
   const date = slotStartAt.toISOString().split("T")[0];
@@ -56,7 +62,8 @@ export async function createBookingOptimistically(
     return createBookingInTx(tx as any, userId, slot, dto);
   });
 
-  await triggerSlotRegen(userId, booking.slot.startAt);
+  await triggerSlotRegen(booking.slot.hostId, booking.slot.startAt);
+  await startSendBookingConfirmationEmailWorkflow(booking.id);
 
   return {
     booking: {
@@ -106,14 +113,13 @@ export async function createBookingPessimistically(
   };
 }
 
-
 export async function listHostBooking(
   userId: number,
-  filters: { from?: Date; to?: Date; status?: string }
+  filters: { from?: Date; to?: Date; status?: string },
 ) {
   const bookings = await listHostBookings(userId, filters);
 
-  return bookings.map(b => ({
+  return bookings.map((b) => ({
     id: b.id,
     status: b.status,
     inviteeEmail: b.inviteeEmail,

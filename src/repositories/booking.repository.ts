@@ -7,7 +7,7 @@ export async function createBookingInTx(
   tx: TxClient,
   userId: number,
   slot: any, // or we can just pass the data
-  dto: CreateBookingDto
+  dto: CreateBookingDto,
 ) {
   return tx.booking.create({
     data: {
@@ -16,7 +16,7 @@ export async function createBookingInTx(
       inviteeName: dto.inviteeName,
       inviteeNotes: dto.inviteeNotes,
       status: "CONFIRMED",
-      hostId: userId,
+      hostId: slot.hostId,
       eventTypeId: slot.eventId,
     },
     include: {
@@ -27,7 +27,7 @@ export async function createBookingInTx(
 
 export async function listHostBookings(
   userId: number,
-  filters: { from?: Date; to?: Date; status?: string }
+  filters: { from?: Date; to?: Date; status?: string },
 ) {
   const where: any = {
     hostId: userId,
@@ -59,3 +59,17 @@ export async function listHostBookings(
   });
 }
 
+export async function getBookingById(bookingId: number) {
+  const booking = prisma.booking.findUnique({
+    where: {
+      id: bookingId,
+    },
+    include: {
+      slot: true,
+      eventType: true,
+      host: true,
+    },
+  });
+
+  return booking;
+}

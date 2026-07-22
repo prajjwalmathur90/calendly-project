@@ -84,7 +84,7 @@ export async function regenerateHostSlots(input: RegenerateHostSlotsInput) {
     : DateTime.now().startOf("day").toUTC();
 
   const to = input.to
-    ? DateTime.fromISO(input.to, { zone: "utc" }).startOf("day")
+    ? DateTime.fromISO(input.to, { zone: "utc" }).endOf("day")
     : from.plus({ days: SLOT_GENERATION_SLOTS }).endOf("day").toUTC();
 
   // Fetch everything needed for slot generation in parallel.
