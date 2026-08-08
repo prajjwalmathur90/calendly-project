@@ -17,7 +17,7 @@ import {
   updateException,
 } from "../repositories/availability.js";
 import { getByID } from "../repositories/user.repository.js";
-import { regenerateHostSlotsWorkflow } from "../temporal/workflows/slot-generation.workflow.js";
+import { startRegenerateHostSlotsWorkflow } from "../temporal/client.js";
 import { forbidden, notFound } from "../utils/api-error.js";
 
 export async function listRulesService(userId: number) {
@@ -38,7 +38,7 @@ export async function createRuleService(
     throw notFound("User not found");
   }
 
-  await regenerateHostSlotsWorkflow({ hostId: userId });
+  await startRegenerateHostSlotsWorkflow({ hostId: userId });
 
   return createAvailability(userId, data);
 }
@@ -58,7 +58,7 @@ export async function updateRuleService(
   }
 
   const update = await updateAvailability(id, data);
-  await regenerateHostSlotsWorkflow({ hostId: userId });
+  await startRegenerateHostSlotsWorkflow({ hostId: userId });
   return update;
 }
 
@@ -73,7 +73,7 @@ export async function deleteRuleService(userId: number, id: number) {
   }
 
   const remove = await deleteAvailability(id);
-  await regenerateHostSlotsWorkflow({ hostId: userId });
+  await startRegenerateHostSlotsWorkflow({ hostId: userId });
   return remove;
 }
 
@@ -94,7 +94,7 @@ export async function createExceptionService(
   if (!user) {
     throw notFound("User not found");
   }
-  await regenerateHostSlotsWorkflow({ hostId: userId });
+  await startRegenerateHostSlotsWorkflow({ hostId: userId });
 
   return createException(userId, data);
 }
@@ -116,7 +116,7 @@ export async function updateExceptionService(
   }
 
   const update = await updateException(id, data);
-  await regenerateHostSlotsWorkflow({ hostId: userId });
+  await startRegenerateHostSlotsWorkflow({ hostId: userId });
   return update;
 }
 
@@ -133,6 +133,6 @@ export async function deleteExceptionService(userId: number, id: number) {
   }
 
   const remove = await deleteException(id);
-  await regenerateHostSlotsWorkflow({ hostId: userId });
+  await startRegenerateHostSlotsWorkflow({ hostId: userId });
   return remove;
 }

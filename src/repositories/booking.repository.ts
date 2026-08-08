@@ -73,3 +73,13 @@ export async function getBookingById(bookingId: number) {
 
   return booking;
 }
+
+export async function updateBookingCalendarDetails(
+  bookingId: number,
+  data: { meetLink: string; calendarEventId: string },
+) {
+  return prisma.booking.update({
+    where: { id: bookingId },
+    data,
+  });
+}

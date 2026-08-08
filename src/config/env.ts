@@ -30,3 +30,5 @@ export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
 export const GOOGLE_CLIENT_URI = process.env.GOOGLE_CLIENT_URI || "";
 export const GOOGLE_SENDER_EMAIL =
   process.env.GOOGLE_SENDER_EMAIL || "info@example.com";
+export const GOOGLE_REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN || "";
+export const GOOGLE_CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID || "primary";

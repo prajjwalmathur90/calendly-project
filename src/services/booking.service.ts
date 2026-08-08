@@ -14,6 +14,7 @@ import {
 import {
   startRegenerateHostSlotsWorkflow,
   startSendBookingConfirmationEmailWorkflow,
+  startCreateGoogleCalendarEventWorkflow,
 } from "../temporal/client.js";
 
 async function triggerSlotRegen(hostId: number, slotStartAt: Date) {
@@ -64,6 +65,7 @@ export async function createBookingOptimistically(
 
   await triggerSlotRegen(booking.slot.hostId, booking.slot.startAt);
   await startSendBookingConfirmationEmailWorkflow(booking.id);
+  await startCreateGoogleCalendarEventWorkflow(booking.id);
 
   return {
     booking: {

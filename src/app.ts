@@ -6,6 +6,7 @@ import { eventRouter } from "./routers/event-type.router.js";
 import { publicEventRouter } from "./routers/public-event.router.js";
 import { availabilityRouter } from "./routers/availability.router.js";
 import { bookingRouter } from "./routers/booking.router.js";
+import { calendarRouter } from "./routers/google-calendar.router.js";
 
 const app: Express = express();
 
@@ -46,6 +47,7 @@ app.use("/events", eventRouter);
 app.use("/availability", availabilityRouter);
 app.use("/public", publicEventRouter);
 app.use("/bookings", bookingRouter);
+app.use("/integrations/google", calendarRouter);
 app.use(routeNotFound);
 app.use(errorHandler);
 export { app };
