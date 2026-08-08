@@ -5,7 +5,7 @@ type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
 export async function createBookingInTx(
   tx: TxClient,
-  userId: number,
+  _userId: number,
   slot: any, // or we can just pass the data
   dto: CreateBookingDto,
 ) {
