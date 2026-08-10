@@ -4,17 +4,19 @@ import {
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
   GOOGLE_CLIENT_URI,
-  GOOGLE_REFRESH_TOKEN,
   GOOGLE_SENDER_EMAIL,
 } from "../config/env.js";
 import { notFound } from "../utils/api-error.js";
 import { getBookingById } from "../repositories/booking.repository.js";
+import { redisClient } from "./redis.service.js";
 
 const scopes = [
   "https://www.googleapis.com/auth/calendar",
   "https://www.googleapis.com/auth/calendar.events",
   "https://www.googleapis.com/auth/userinfo.email",
 ];
+
+const GOOGLE_REFRESH_TOKEN_KEY = "google:refresh_token";
 
 export function isProjectCalendarConfigured(): boolean {
   return Boolean(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET && GOOGLE_CLIENT_URI);
@@ -44,6 +46,7 @@ export function getSetupAuthUrl() {
 
 export async function exchangeSetupCode(code: string) {
   const client = getGoogleOathClient();
+
   const { tokens } = await client.getToken(code);
 
   if (!tokens.refresh_token) {
@@ -58,24 +61,31 @@ export async function exchangeSetupCode(code: string) {
   });
 
   const { data } = await oauth2.userinfo.get();
-  //   we have to store it in redis
+
+  await redisClient.set(GOOGLE_REFRESH_TOKEN_KEY, tokens.refresh_token);
 
   return {
-    refreshToken: tokens.refresh_token,
     email: data.email ?? GOOGLE_SENDER_EMAIL,
   };
 }
 
-export function getGoogleCalendarClient(): InstanceType<
-  typeof google.auth.OAuth2
+export async function getGoogleCalendarClient(): Promise<
+  InstanceType<typeof google.auth.OAuth2>
 > {
   if (!isProjectCalendarConfigured()) {
     throw new Error("Google project calendar is not configured");
   }
 
   const client = getGoogleOathClient();
+
+  const refreshToken = await redisClient.get(GOOGLE_REFRESH_TOKEN_KEY);
+
+  if (!refreshToken) {
+    throw new Error("Google refresh token not found");
+  }
+
   client.setCredentials({
-    refresh_token: GOOGLE_REFRESH_TOKEN, // we have to fetch it from redis
+    refresh_token: refreshToken,
   });
 
   return client;
@@ -88,7 +98,7 @@ export async function createGoogleCalendarEvent(bookingId: number) {
     throw notFound("Booking not found or not confirmed");
   }
 
-  const client = getGoogleCalendarClient();
+  const client = await getGoogleCalendarClient();
 
   const calendar = await google.calendar({
     version: "v3",

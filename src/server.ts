@@ -5,11 +5,13 @@ import { connectDatabase } from "./config/database.js";
 // server.ts will become server.js and app.ts will become app.js
 
 import { PORT } from "./config/env.js";
+import { connectRedis } from "./services/redis.service.js";
 
 async function startServer() {
   await connectDatabase();
+  await connectRedis();
 
-  app.listen(PORT, async () => {
+  app.listen(PORT, () => {
     console.log(`Server is running on PORT : ${PORT}`);
   });
 }

@@ -8,12 +8,11 @@ export async function setupGoogleCallback(req: Request, res: Response) {
     throw badRequest("No code provided");
   }
 
-  const { refreshToken, email } = await exchangeSetupCode(code);
+  const { email } = await exchangeSetupCode(code);
 
   res.status(200).json({
     success: true,
     data: {
-      refreshToken,
       email,
     },
   });

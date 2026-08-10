@@ -6,8 +6,13 @@ import {
 } from "../config/env.js";
 import * as activities from "./activities/index.js";
 import { fileURLToPath } from "node:url";
+import { connectRedis } from "../services/redis.service.js";
 
 async function run() {
+  // Connect Redis before starting the worker — activities like
+  // createGoogleCalendarEventActivity need it to fetch tokens.
+  await connectRedis();
+
   const connection = await NativeConnection.connect({
     address: TEMPORAL_ADDRESS,
   });
