@@ -1,16 +1,31 @@
 version: "3.8"
 
 services:
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: CalendlyNodeApp
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:6.2-alpine
+    ports:
+      - "6379:6379"
+
   temporal:
     image: temporalio/auto-setup:1.25.2
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    depends_on:
+      - mysql
     environment:
       DB: mysql8
       DB_PORT: 3306
       MYSQL_USER: root
       MYSQL_PWD: root123
-      MYSQL_SEEDS: host.docker.internal
+      MYSQL_SEEDS: mysql
       DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/development-sql.yaml
     ports:
       - "7233:7233"
@@ -32,3 +47,6 @@ services:
     ports:
       - "1025:1025" # SMTP server
       - "8025:8025" # Web Interface
+
+volumes:
+  mysql_data:
