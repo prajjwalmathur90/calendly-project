@@ -12,7 +12,10 @@
     "prisma:generate": "npx prisma generate",
     "prisma:all": "npm run prisma:format && npm run prisma:migrate && npm run prisma:generate",
     "prisma:studio": "npx prisma studio",
-    "google:setup": "tsx src/utils/google-setup.ts"
+    "google:setup": "tsx src/utils/google-setup.ts",
+    "build": "prisma generate && tsc",
+    "start": "node dist/src/server.js",
+    "start:worker": "node dist/src/temporal/worker.js"
   },
   "keywords": [],
   "author": "",
@@ -30,6 +33,7 @@
     "google-auth-library": "^11.0.0",
     "googleapis": "^174.0.1",
     "luxon": "^3.7.2",
+    "mariadb": "^3.5.3",
     "nodemailer": "^9.0.3",
     "redis": "^6.2.0",
     "slug": "^11.0.1",

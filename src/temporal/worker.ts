@@ -23,7 +23,10 @@ async function run() {
     taskQueue: TEMPORAL_TASK_QUEUE,
     activities,
     workflowsPath: fileURLToPath(
-      new URL("./workflows/index.ts", import.meta.url),
+      new URL(
+        process.env.NODE_ENV === "production" ? "./workflows/index.js" : "./workflows/index.ts", 
+        import.meta.url
+      ),
     ),
   });
   console.log(

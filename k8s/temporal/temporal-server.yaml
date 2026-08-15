@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temporal
+  namespace: calendly
+  labels:
+    app: temporal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: temporal
+  template:
+    metadata:
+      labels:
+        app: temporal
+    spec:
+      containers:
+        - name: temporal
+          image: temporalio/auto-setup:1.25.2
+          ports:
+            - name: grpc
+              containerPort: 7233
+          env:
+            - name: DB
+              value: "mysql8"
+            - name: DB_PORT
+              value: "3306"
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: calendly-secrets
+                  key: TEMPORAL_MYSQL_USER
+            - name: MYSQL_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: calendly-secrets
+                  key: TEMPORAL_MYSQL_PWD
+            - name: MYSQL_SEEDS
+              valueFrom:
+                secretKeyRef:
+                  name: calendly-secrets
+                  key: TEMPORAL_MYSQL_SEEDS
+            - name: MYSQL_TLS_ENABLED
+              value: "false"
+            - name: DYNAMIC_CONFIG_FILE_PATH
+              value: "config/dynamicconfig/development-sql.yaml"
+          volumeMounts:
+            - name: dynamic-config
+              mountPath: /etc/temporal/config/dynamicconfig
+              readOnly: true
+          startupProbe:
+            tcpSocket:
+              port: 7233
+            failureThreshold: 30
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 7233
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 7233
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+      volumes:
+        - name: dynamic-config
+          configMap:
+            name: temporal-dynamic-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal
+  namespace: calendly
+spec:
+  selector:
+    app: temporal
+  ports:
+    - name: grpc
+      port: 7233
+      targetPort: 7233

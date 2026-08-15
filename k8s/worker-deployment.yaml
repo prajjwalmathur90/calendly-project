@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calendly-worker
+  namespace: calendly
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: calendly-worker
+  template:
+    metadata:
+      labels:
+        app: calendly-worker
+    spec:
+      containers:
+        - name: worker
+          image: calendlyprajjwalacr.azurecr.io/calendly-worker:v1
+          env:
+            - name: NODE_ENV
+              value: "production"
+          envFrom:
+            - secretRef:
+                name: calendly-secrets
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
